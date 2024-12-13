@@ -38,6 +38,10 @@ const ImagePreview: React.FC = () => {
       const response = await axios.get(
         `${baseUrl}/images?page=${currentPage}&limit=${imagesPerPage}`
       );
+
+      if(response.data.msg) {
+        alert('33 lalala');
+      }
       const fetchedImages: string[] = response.data.images; // Assuming the backend returns images in this format
 
       // Initialize image data with loaded status as false
