@@ -6,7 +6,7 @@ import './ImagePreview.css';
 // If using the utility file, uncomment the next line
 // import { downloadImage } from '../utils/downloadUtils';
 
-const baseUrl = `https://legendary-umbrella.onrender.com:5000`;
+const baseUrl = `https://legendary-umbrella.onrender.com`;
 
 interface ImageData {
   url: string;
