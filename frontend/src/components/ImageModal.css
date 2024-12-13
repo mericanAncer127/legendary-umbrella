@@ -1,0 +1,87 @@
+/* src/components/ImageModal.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Ensure the modal is on top */
+  animation: fadeIn 0.3s;
+}
+
+.modal-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  animation: slideIn 0.3s;
+}
+
+.modal-image {
+  width: 100%;
+  height: auto;
+  max-height: 80vh; /* Prevent the image from exceeding the viewport height */
+  border-radius: 8px;
+}
+
+/* Close Button Styles */
+.close-button {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background-color: #fff;
+  color: #333;
+  border: none;
+  border-radius: 50%;
+  font-size: 24px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+
+.close-button:hover {
+  background-color: #f1f1f1;
+}
+
+/* Download Button Styles in Modal */
+.modal-download-button {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 50px;
+  height: 50px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10; /* Ensure it's on top */
+  transition: background-color 0.2s;
+}
+
+.modal-download-button:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.download-icon {
+  width: 24px;
+  height: 24px;
+  color: #333;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-50px); }
+  to { transform: translateY(0); }
+}
