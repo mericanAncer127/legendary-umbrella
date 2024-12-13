@@ -18,7 +18,7 @@ function App() {
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
-      const response = await fetch('http://localhost:5000/products');
+      const response = await fetch('https://legendary-umbrella.onrender.com:5000/products');
 
       const responseData = await response.json();
 
@@ -36,7 +36,7 @@ function App() {
         price: +productPrice // "+" to convert string to number
       };
       let hasError = false;
-      const response = await fetch('http://localhost:5000/product', {
+      const response = await fetch('https://legendary-umbrella.onrender.com:5000/product', {
         method: 'POST',
         body: JSON.stringify(newProduct),
         headers: {
