@@ -55,10 +55,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.get('/images', async (req: Request, res: Response, next: NextFunction) => {
   const page: number = parseInt(req.query.page as string) || 1; // Default to page 1
   const limit: number = parseInt(req.query.limit as string) || 20; // Default to 20 items per page
-  const password: string = req.query.password?.toLocaleString() || "123";
-  const confirm: string = req.query.password?.toLocaleString() || "2";
+  // const password: string = req.query.password?.toLocaleString() || "123";
+  // const confirm: string = req.query.password?.toLocaleString() || "2";
 
-  if(password !== confirm) return res.status(500).json({msg: "Hey, 2 options here. Guess the password 😂, otherwise contact telegram @myidealdev"});
+  // if(password !== confirm) return res.status(500).json({msg: "Hey, 2 options here. Guess the password 😂, otherwise contact telegram @myidealdev"});
 
   // Calculate the offset
   const offset = (page - 1) * limit;
