@@ -6,7 +6,6 @@ import './ImagePreview.css';
 
 const baseUrl = `https://legendary-umbrella.onrender.com`;
 
-// Update the interface to match the new server response
 interface ImageData {
   imageUrl: string;
   thumbnail: string;
@@ -16,8 +15,10 @@ interface ImageData {
 const ImagePreview: React.FC = () => {
   const [imageUrls, setImageUrls] = useState<ImageData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [imagesPerPage, setImagesPerPage] = useState<number>(20); 
+  const [imagesPerPage, setImagesPerPage] = useState<number>(20);
   const [totalPages, setTotalPages] = useState(0);
+
+  const [pageInputValue, setPageInputValue] = useState<string>(''); // State for page input
 
   // State for Modal
   const [selectedImage, setSelectedImage] = useState<ImageData | null>(null);
@@ -33,7 +34,7 @@ const ImagePreview: React.FC = () => {
   const loadImages = async () => {
     try {
       const response = await axios.get(
-        `${baseUrl}/images?page=${currentPage}&limit=${imagesPerPage}&password=2&confirm=2`
+        `${baseUrl}/images?page=${currentPage}&limit=${imagesPerPage}`
       );
 
       if (response.data.msg) {
@@ -41,17 +42,7 @@ const ImagePreview: React.FC = () => {
         return;
       }
 
-      // Now the response data format is:
-      // {
-      //   currentPage: number,
-      //   totalItems: number,
-      //   totalPages: number,
-      //   itemsPerPage: number,
-      //   images: [{ imageUrl: string; thumbnail: string }]
-      // }
-
       const fetchedImages: { imageUrl: string; thumbnail: string }[] = response.data.images;
-
       const imagesWithLoading = fetchedImages.map((img) => ({
         imageUrl: img.imageUrl,
         thumbnail: img.thumbnail,
@@ -121,12 +112,30 @@ const ImagePreview: React.FC = () => {
   const nextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
+      setPageInputValue(''); // Clear page input
     }
   };
 
   const prevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
+      setPageInputValue(''); // Clear page input
+    }
+  };
+
+  const goToPage = () => {
+    const pageNumber = parseInt(pageInputValue, 10);
+    if (!isNaN(pageNumber) && pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    } else {
+      alert(`Please enter a page number between 1 and ${totalPages}`);
+    }
+    setPageInputValue('');
+  };
+
+  const handlePageInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      goToPage();
     }
   };
 
@@ -163,11 +172,11 @@ const ImagePreview: React.FC = () => {
               >
                 {!image.loaded && <div className="loader"></div>}
                 <img
-                  src={image.thumbnail} // Use the thumbnail URL here
+                  src={image.thumbnail}
                   alt={`Thumbnail ${index + 1}`}
                   className={`image ${image.loaded ? 'visible' : 'hidden'}`}
                   onLoad={() => handleImageLoad(index)}
-                  onError={() => handleImageLoad(index)} // Treat errors as loaded to remove loader
+                  onError={() => handleImageLoad(index)}
                   loading="lazy"
                 />
                 {/* Download Button */}
@@ -208,6 +217,18 @@ const ImagePreview: React.FC = () => {
         <button onClick={nextPage} disabled={currentPage === totalPages}>
           Next
         </button>
+        
+        <div className="pagination-input">
+          <input
+            type="number"
+            value={pageInputValue}
+            onChange={(e) => setPageInputValue(e.target.value)}
+            onKeyPress={handlePageInputKeyPress}
+            placeholder="Go to page..."
+            min="1"
+          />
+          <button onClick={goToPage}>Go</button>
+        </div>
       </div>
 
       {/* Image Modal */}
