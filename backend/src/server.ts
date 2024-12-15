@@ -4,6 +4,8 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import csvParser from 'csv-parser';
+import axios from 'axios';
+import sharp from 'sharp';
 
 const app = express();
 
@@ -50,7 +52,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Endpoint to retrieve the URLs from the CSV
-app.get('/images', (req: Request, res: Response, next: NextFunction) => {
+app.get('/images', async (req: Request, res: Response, next: NextFunction) => {
   const page: number = parseInt(req.query.page as string) || 1; // Default to page 1
   const limit: number = parseInt(req.query.limit as string) || 20; // Default to 20 items per page
   const password: string = req.query.password?.toLocaleString() || "123";
@@ -64,14 +66,51 @@ app.get('/images', (req: Request, res: Response, next: NextFunction) => {
   // Get the images slice based on pagination
   const paginatedImages = URLs.slice(offset, offset + limit);
 
-  // Return the response
-  return res.status(200).json({
-    currentPage: page,
-    totalItems: URLs.length,
-    totalPages: Math.ceil(URLs.length / limit),
-    itemsPerPage: limit,
-    images: paginatedImages,
-  });
+  
+  try {
+    // For each image, fetch the original, generate thumbnail, and encode it
+    const imagesWithThumbnails = await Promise.all(
+      paginatedImages.map(async (imageUrl) => {
+        try {
+          // Fetch the image
+          const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+          const imageBuffer = Buffer.from(response.data, 'binary');
+
+          // Generate a thumbnail using sharp
+          const thumbnailBuffer = await sharp(imageBuffer)
+            .resize({ width: 200 }) // adjust thumbnail width as needed
+            .jpeg({ quality: 80 })
+            .toBuffer();
+
+          // Convert thumbnail to base64 data URL
+          const thumbnailBase64 = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
+
+          return {
+            imageUrl,
+            thumbnail: thumbnailBase64
+          };
+        } catch (error) {
+          console.error(`Error processing image ${imageUrl}: ${error}`);
+          return {
+            imageUrl,
+            thumbnail: null // or a placeholder
+          };
+        }
+      })
+    );
+
+    // Return the response
+    return res.status(200).json({
+      currentPage: page,
+      totalItems: URLs.length,
+      totalPages: Math.ceil(URLs.length / limit),
+      itemsPerPage: limit,
+      images: imagesWithThumbnails,
+    });
+  } catch (err) {
+    console.error(`Error generating thumbnails: ${err}`);
+    return res.status(500).json({ msg: 'Error generating thumbnails' });
+  }
 });
 
 // Sample product endpoints (not affected by CSV logic)

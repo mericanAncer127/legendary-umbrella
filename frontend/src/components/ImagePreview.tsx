@@ -3,20 +3,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ImageModal from './ImageModal'; // Import the ImageModal component
 import './ImagePreview.css';
-// If using the utility file, uncomment the next line
-// import { downloadImage } from '../utils/downloadUtils';
 
 const baseUrl = `https://legendary-umbrella.onrender.com`;
 
+// Update the interface to match the new server response
 interface ImageData {
-  url: string;
+  imageUrl: string;
+  thumbnail: string;
   loaded: boolean;
 }
 
 const ImagePreview: React.FC = () => {
   const [imageUrls, setImageUrls] = useState<ImageData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [imagesPerPage, setImagesPerPage] = useState<number>(20); // Converted to state variable
+  const [imagesPerPage, setImagesPerPage] = useState<number>(20); 
   const [totalPages, setTotalPages] = useState(0);
 
   // State for Modal
@@ -26,39 +26,46 @@ const ImagePreview: React.FC = () => {
   // Ref to store the triggering element for accessibility
   const triggerRef = useRef<HTMLDivElement | null>(null);
 
-  // Load images when current page or imagesPerPage changes
   useEffect(() => {
     loadImages();
   }, [currentPage, imagesPerPage]);
 
-  // Fetch images and total count
   const loadImages = async () => {
     try {
-      // Fetch the images for the current page with the specified limit
       const response = await axios.get(
-        `${baseUrl}/images?page=${currentPage}&limit=${imagesPerPage}`
+        `${baseUrl}/images?page=${currentPage}&limit=${imagesPerPage}&password=2&confirm=2`
       );
 
-      if(response.data.msg) {
-        alert('33 lalala');
+      if (response.data.msg) {
+        alert('Error: ' + response.data.msg);
+        return;
       }
-      const fetchedImages: string[] = response.data.images; // Assuming the backend returns images in this format
 
-      // Initialize image data with loaded status as false
-      const imagesWithLoading = fetchedImages.map((url) => ({
-        url,
+      // Now the response data format is:
+      // {
+      //   currentPage: number,
+      //   totalItems: number,
+      //   totalPages: number,
+      //   itemsPerPage: number,
+      //   images: [{ imageUrl: string; thumbnail: string }]
+      // }
+
+      const fetchedImages: { imageUrl: string; thumbnail: string }[] = response.data.images;
+
+      const imagesWithLoading = fetchedImages.map((img) => ({
+        imageUrl: img.imageUrl,
+        thumbnail: img.thumbnail,
         loaded: false,
       }));
 
       setImageUrls(imagesWithLoading);
-      setTotalPages(response.data.totalPages); // Adjust based on your backend response
+      setTotalPages(response.data.totalPages);
     } catch (error) {
       console.error('Error fetching images:', error);
       alert('Failed to load images. Please try again later.');
     }
   };
 
-  // Handle image load
   const handleImageLoad = (index: number) => {
     setImageUrls((prevImages) => {
       const updatedImages = [...prevImages];
@@ -67,14 +74,12 @@ const ImagePreview: React.FC = () => {
     });
   };
 
-  // Handle image click to open modal
   const handleImageClick = (image: ImageData, event: React.MouseEvent<HTMLDivElement>) => {
     setSelectedImage(image);
     setIsModalOpen(true);
     triggerRef.current = event.currentTarget; // Store the triggering element
   };
 
-  // Handle modal close
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedImage(null);
@@ -82,7 +87,6 @@ const ImagePreview: React.FC = () => {
     triggerRef.current?.focus();
   };
 
-  // Handle imagesPerPage change
   const handleImagesPerPageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
     if (!isNaN(value) && value > 0) {
@@ -91,11 +95,10 @@ const ImagePreview: React.FC = () => {
     }
   };
 
-  // Helper function for downloading images
   const downloadImage = async (url: string, filename: string) => {
     try {
       const response = await fetch(url, {
-        mode: 'cors', // Ensure CORS is handled
+        mode: 'cors',
       });
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -115,14 +118,12 @@ const ImagePreview: React.FC = () => {
     }
   };
 
-  // Go to the next page if there are more pages
   const nextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
 
-  // Go to the previous page if we're not on the first page
   const prevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -153,7 +154,7 @@ const ImagePreview: React.FC = () => {
                 key={index}
                 className="image-wrapper"
                 onClick={(e) => handleImageClick(image, e)}
-                tabIndex={0} // Make div focusable for accessibility
+                tabIndex={0}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     handleImageClick(image, e as any);
@@ -162,12 +163,12 @@ const ImagePreview: React.FC = () => {
               >
                 {!image.loaded && <div className="loader"></div>}
                 <img
-                  src={image.url}
-                  alt={`Image ${index + 1}`}
+                  src={image.thumbnail} // Use the thumbnail URL here
+                  alt={`Thumbnail ${index + 1}`}
                   className={`image ${image.loaded ? 'visible' : 'hidden'}`}
                   onLoad={() => handleImageLoad(index)}
                   onError={() => handleImageLoad(index)} // Treat errors as loaded to remove loader
-                  loading="lazy" // Enables native lazy loading
+                  loading="lazy"
                 />
                 {/* Download Button */}
                 <button
@@ -175,7 +176,7 @@ const ImagePreview: React.FC = () => {
                   aria-label={`Download Image ${index + 1}`}
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent triggering image click
-                    downloadImage(image.url, `image-${currentPage}-${index + 1}.jpg`);
+                    downloadImage(image.imageUrl, `image-${currentPage}-${index + 1}.jpg`);
                   }}
                 >
                   {/* SVG Download Icon */}
@@ -212,8 +213,8 @@ const ImagePreview: React.FC = () => {
       {/* Image Modal */}
       <ImageModal
         isOpen={isModalOpen}
-        imageUrl={selectedImage?.url || ''}
-        altText={`Image ${imageUrls.indexOf(selectedImage || { url: '', loaded: false }) + 1}`}
+        imageUrl={selectedImage?.imageUrl || ''}
+        altText={`Image ${selectedImage ? imageUrls.indexOf(selectedImage) + 1 : ''}`}
         onClose={closeModal}
       />
     </div>

@@ -8,6 +8,8 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const fs_1 = __importDefault(require("fs"));
 const csv_parser_1 = __importDefault(require("csv-parser"));
+const axios_1 = __importDefault(require("axios"));
+const sharp_1 = __importDefault(require("sharp"));
 const app = (0, express_1.default)();
 // Store parsed URLs in memory
 const URLs = [];
@@ -39,21 +41,58 @@ app.use((req, res, next) => {
     next();
 });
 // Endpoint to retrieve the URLs from the CSV
-app.get('/images', (req, res, next) => {
+app.get('/images', async (req, res, next) => {
+    var _a, _b;
     const page = parseInt(req.query.page) || 1; // Default to page 1
     const limit = parseInt(req.query.limit) || 20; // Default to 20 items per page
+    const password = ((_a = req.query.password) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "123";
+    const confirm = ((_b = req.query.password) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "2";
+    if (password !== confirm)
+        return res.status(500).json({ msg: "Hey, 2 options here. Guess the password 😂, otherwise contact telegram @myidealdev" });
     // Calculate the offset
     const offset = (page - 1) * limit;
     // Get the images slice based on pagination
     const paginatedImages = URLs.slice(offset, offset + limit);
-    // Return the response
-    res.status(200).json({
-        currentPage: page,
-        totalItems: URLs.length,
-        totalPages: Math.ceil(URLs.length / limit),
-        itemsPerPage: limit,
-        images: paginatedImages,
-    });
+    try {
+        // For each image, fetch the original, generate thumbnail, and encode it
+        const imagesWithThumbnails = await Promise.all(paginatedImages.map(async (imageUrl) => {
+            try {
+                // Fetch the image
+                const response = await axios_1.default.get(imageUrl, { responseType: 'arraybuffer' });
+                const imageBuffer = Buffer.from(response.data, 'binary');
+                // Generate a thumbnail using sharp
+                const thumbnailBuffer = await (0, sharp_1.default)(imageBuffer)
+                    .resize({ width: 200 }) // adjust thumbnail width as needed
+                    .jpeg({ quality: 80 })
+                    .toBuffer();
+                // Convert thumbnail to base64 data URL
+                const thumbnailBase64 = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
+                return {
+                    imageUrl,
+                    thumbnail: thumbnailBase64
+                };
+            }
+            catch (error) {
+                console.error(`Error processing image ${imageUrl}: ${error}`);
+                return {
+                    imageUrl,
+                    thumbnail: null // or a placeholder
+                };
+            }
+        }));
+        // Return the response
+        return res.status(200).json({
+            currentPage: page,
+            totalItems: URLs.length,
+            totalPages: Math.ceil(URLs.length / limit),
+            itemsPerPage: limit,
+            images: imagesWithThumbnails,
+        });
+    }
+    catch (err) {
+        console.error(`Error generating thumbnails: ${err}`);
+        return res.status(500).json({ msg: 'Error generating thumbnails' });
+    }
 });
 // Sample product endpoints (not affected by CSV logic)
 app.get('/products', (req, res, next) => {
