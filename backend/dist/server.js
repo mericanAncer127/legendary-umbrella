@@ -42,13 +42,11 @@ app.use((req, res, next) => {
 });
 // Endpoint to retrieve the URLs from the CSV
 app.get('/images', async (req, res, next) => {
-    var _a, _b;
     const page = parseInt(req.query.page) || 1; // Default to page 1
     const limit = parseInt(req.query.limit) || 20; // Default to 20 items per page
-    const password = ((_a = req.query.password) === null || _a === void 0 ? void 0 : _a.toLocaleString()) || "123";
-    const confirm = ((_b = req.query.password) === null || _b === void 0 ? void 0 : _b.toLocaleString()) || "2";
-    if (password !== confirm)
-        return res.status(500).json({ msg: "Hey, 2 options here. Guess the password 😂, otherwise contact telegram @myidealdev" });
+    // const password: string = req.query.password?.toLocaleString() || "123";
+    // const confirm: string = req.query.password?.toLocaleString() || "2";
+    // if(password !== confirm) return res.status(500).json({msg: "Hey, 2 options here. Guess the password 😂, otherwise contact telegram @myidealdev"});
     // Calculate the offset
     const offset = (page - 1) * limit;
     // Get the images slice based on pagination
