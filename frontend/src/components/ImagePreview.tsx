@@ -8,7 +8,7 @@ const baseUrl = `https://legendary-umbrella.onrender.com`;
 
 interface ImageData {
   imageUrl: string;
-  thumbnail: string;
+  // thumbnail: string;
   loaded: boolean;
 }
 
@@ -42,10 +42,10 @@ const ImagePreview: React.FC = () => {
         return;
       }
 
-      const fetchedImages: { imageUrl: string; thumbnail: string }[] = response.data.images;
+      const fetchedImages: { imageUrl: string }[] = response.data.images;
       const imagesWithLoading = fetchedImages.map((img) => ({
         imageUrl: img.imageUrl,
-        thumbnail: img.thumbnail,
+        // thumbnail: img.thumbnail,
         loaded: false,
       }));
 
@@ -172,7 +172,7 @@ const ImagePreview: React.FC = () => {
               >
                 {!image.loaded && <div className="loader"></div>}
                 <img
-                  src={image.thumbnail}
+                  src={image.imageUrl}
                   alt={`Thumbnail ${index + 1}`}
                   className={`image ${image.loaded ? 'visible' : 'hidden'}`}
                   onLoad={() => handleImageLoad(index)}
