@@ -8,8 +8,6 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const fs_1 = __importDefault(require("fs"));
 const csv_parser_1 = __importDefault(require("csv-parser"));
-const axios_1 = __importDefault(require("axios"));
-const sharp_1 = __importDefault(require("sharp"));
 const app = (0, express_1.default)();
 // Store parsed URLs in memory
 const URLs = [];
@@ -52,39 +50,40 @@ app.get('/images', async (req, res, next) => {
     // Get the images slice based on pagination
     const paginatedImages = URLs.slice(offset, offset + limit);
     try {
-        // For each image, fetch the original, generate thumbnail, and encode it
-        const imagesWithThumbnails = await Promise.all(paginatedImages.map(async (imageUrl) => {
-            try {
-                // Fetch the image
-                const response = await axios_1.default.get(imageUrl, { responseType: 'arraybuffer' });
-                const imageBuffer = Buffer.from(response.data, 'binary');
-                // Generate a thumbnail using sharp
-                const thumbnailBuffer = await (0, sharp_1.default)(imageBuffer)
-                    .resize({ width: 200 }) // adjust thumbnail width as needed
-                    .jpeg({ quality: 80 })
-                    .toBuffer();
-                // Convert thumbnail to base64 data URL
-                const thumbnailBase64 = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
-                return {
-                    imageUrl,
-                    thumbnail: thumbnailBase64
-                };
-            }
-            catch (error) {
-                console.error(`Error processing image ${imageUrl}: ${error}`);
-                return {
-                    imageUrl,
-                    thumbnail: null // or a placeholder
-                };
-            }
-        }));
+        //   // For each image, fetch the original, generate thumbnail, and encode it
+        //   const imagesWithThumbnails = await Promise.all(
+        //     paginatedImages.map(async (imageUrl) => {
+        //       try {
+        //         // Fetch the image
+        //         const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+        //         const imageBuffer = Buffer.from(response.data, 'binary');
+        //         // Generate a thumbnail using sharp
+        //         const thumbnailBuffer = await sharp(imageBuffer)
+        //           .resize({ width: 200 }) // adjust thumbnail width as needed
+        //           .jpeg({ quality: 80 })
+        //           .toBuffer();
+        //         // Convert thumbnail to base64 data URL
+        //         const thumbnailBase64 = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
+        //         return {
+        //           imageUrl,
+        //           thumbnail: thumbnailBase64
+        //         };
+        //       } catch (error) {
+        //         console.error(`Error processing image ${imageUrl}: ${error}`);
+        //         return {
+        //           imageUrl,
+        //           thumbnail: null // or a placeholder
+        //         };
+        //       }
+        //     })
+        //   );
         // Return the response
         return res.status(200).json({
             currentPage: page,
             totalItems: URLs.length,
             totalPages: Math.ceil(URLs.length / limit),
             itemsPerPage: limit,
-            images: imagesWithThumbnails,
+            images: paginatedImages,
         });
     }
     catch (err) {

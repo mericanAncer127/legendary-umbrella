@@ -68,36 +68,36 @@ app.get('/images', async (req: Request, res: Response, next: NextFunction) => {
 
   
   try {
-    // For each image, fetch the original, generate thumbnail, and encode it
-    const imagesWithThumbnails = await Promise.all(
-      paginatedImages.map(async (imageUrl) => {
-        try {
-          // Fetch the image
-          const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-          const imageBuffer = Buffer.from(response.data, 'binary');
+  //   // For each image, fetch the original, generate thumbnail, and encode it
+  //   const imagesWithThumbnails = await Promise.all(
+  //     paginatedImages.map(async (imageUrl) => {
+  //       try {
+  //         // Fetch the image
+  //         const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+  //         const imageBuffer = Buffer.from(response.data, 'binary');
 
-          // Generate a thumbnail using sharp
-          const thumbnailBuffer = await sharp(imageBuffer)
-            .resize({ width: 200 }) // adjust thumbnail width as needed
-            .jpeg({ quality: 80 })
-            .toBuffer();
+  //         // Generate a thumbnail using sharp
+  //         const thumbnailBuffer = await sharp(imageBuffer)
+  //           .resize({ width: 200 }) // adjust thumbnail width as needed
+  //           .jpeg({ quality: 80 })
+  //           .toBuffer();
 
-          // Convert thumbnail to base64 data URL
-          const thumbnailBase64 = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
+  //         // Convert thumbnail to base64 data URL
+  //         const thumbnailBase64 = `data:image/jpeg;base64,${thumbnailBuffer.toString('base64')}`;
 
-          return {
-            imageUrl,
-            thumbnail: thumbnailBase64
-          };
-        } catch (error) {
-          console.error(`Error processing image ${imageUrl}: ${error}`);
-          return {
-            imageUrl,
-            thumbnail: null // or a placeholder
-          };
-        }
-      })
-    );
+  //         return {
+  //           imageUrl,
+  //           thumbnail: thumbnailBase64
+  //         };
+  //       } catch (error) {
+  //         console.error(`Error processing image ${imageUrl}: ${error}`);
+  //         return {
+  //           imageUrl,
+  //           thumbnail: null // or a placeholder
+  //         };
+  //       }
+  //     })
+  //   );
 
     // Return the response
     return res.status(200).json({
@@ -105,7 +105,7 @@ app.get('/images', async (req: Request, res: Response, next: NextFunction) => {
       totalItems: URLs.length,
       totalPages: Math.ceil(URLs.length / limit),
       itemsPerPage: limit,
-      images: imagesWithThumbnails,
+      images: paginatedImages,
     });
   } catch (err) {
     console.error(`Error generating thumbnails: ${err}`);
