@@ -42,9 +42,9 @@ const ImagePreview: React.FC = () => {
         return;
       }
 
-      const fetchedImages: { imageUrl: string }[] = response.data.images;
+      const fetchedImages: [] = response.data.images;
       const imagesWithLoading = fetchedImages.map((img) => ({
-        imageUrl: img.imageUrl,
+        imageUrl: img,
         // thumbnail: img.thumbnail,
         loaded: false,
       }));
